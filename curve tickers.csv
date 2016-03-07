@@ -1,0 +1,38 @@
+Ticker,Index Name,Region,CountryISO
+BVIS0587 Index,CAD Canada Govt BVAL Curve,Americas,CA
+BVIS0550 Index,US Treasury BVAL Curve,Americas,US
+BVIS0660 Index,CLP Chile Govt BVAL Curve,Americas,CL
+BVIS0627 Index,MXN Mexico Govt BVAL Curve,Americas,MX
+BVIS0661 Index,PEN Peru Govt BVAL Curve,Americas,PE
+BVIS0628 Index,COP/Colombia Govt BVAL Curve,Americas,CO
+BVSC0210 Index,JPY Japan Govt Bills & Bonds BVAL Yield Curve,Asia,JP
+BVIS0560 Index,HKD Hong Kong Govt BVAL Curve,Asia,HK
+BVIS0593 Index,SGD Singapore Govt BVAL Curve,Asia,SG
+BVIS0570 Index,THB Thai Govt BVAL Curve,Asia,TH
+BVIS0572 Index,AUD Australian Govt BVAL Curve,Asia,AU
+BVIS0606 Index,NZD New Zealand Govt BVAL Curve,Asia,NZ
+BVIS0558 Index,CNY China Govt BVAL Curve,Asia,CN
+BVIS0595 Index,MYR Malaysian Govt BVAL Curve,Asia,MY
+BVIS0597 Index,Indonesian Govt BVAL Curve,Asia,ID
+BVIS0571 Index,Indian Govt BVAL Curve,Asia,IN
+BVIS0607 Index,Switzerland Govt BVAL Curve,Europe,CH
+BVIS0608 Index,SEK Sweden Govt BVAL Curve,Europe,SE
+BVIS0554 Index,EUR Germany Govt BUNDs BVAL Curve,Europe,DE
+BVIS0649 Index,EUR Netherlands Govt BVAL Curve,Europe,NL
+BVIS0648 Index,EUR Finland Govt BVAL Curve,Europe,FI
+BVIS0643 Index,EUR Austria Govt BVAL Curve,Europe,AT
+BVIS0641 Index,EUR Belgium Govt BVAL Curve,Europe,BE
+BVIS0646 Index,EUR France Govt OATs BVAL Curve,Europe,FR
+BVIS0647 Index,EUR Ireland Govt BVAL Curve,Europe,IE
+BVIS0629 Index,Czech Govt BVAL Curve,Europe,CZ
+BVIS0630 Index,SKK Slovakia Govt BVAL Curve,Europe,SK
+BVIS0575 Index,EUR Italy Govt BVAL Curve,Europe,IT
+BVIS0552 Index,EUR Spain Govt BVAL Curve,Europe,ES
+BVIS0579 Index,EUR Portugal Govt BVAL Curve,Europe,PT
+BVIS0590 Index,UK Gilts,Europe,GB
+BVIS0611 Index,NOK Norway Govt BVAL Curve,Europe,NO
+BVIS0631 Index,RON Romanian Govt BVAL Curve,Europe,RO
+BVIS0569 Index,HUF Hungarian Govt BVAL Curve,Europe,HU
+BVIS0592 Index,PLN Polish Govt BVAL Curve,Europe,PL
+BVIS0573 Index,RUB Russia Govt BVAL Curve,Europe,RU
+BVIS0658 Index,TRY Turkey Govt BVAL Curve,Europe,TR
