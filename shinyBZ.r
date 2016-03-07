@@ -25,7 +25,7 @@ server<- function(input, output) {
     
     # generate bins based on input$bins from ui.R
     x    <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
+    bins <- seq(min(x), max(x), length.out = input$date_range + 1)
     
     # draw the histogram with the specified number of bins
     hist(x, breaks = bins, col = 'darkgray', border = 'white')
@@ -42,14 +42,11 @@ ui <- fluidPage(
   # Sidebar with a slider input for number of bins
   sidebarLayout(
     sidebarPanel(
-      sliderInput("Date",
-                  "Number of bins:",
-                  min = START_DATE,
-                  max = END_DATE,
-                  value = START_DATE,
-                  step=1,
-                  sep="",
-                  animate = TRUE)
+      sliderInput("date_range",
+                  "Date",
+                  min = as.Date("2016-02-01"), max = Sys.Date(), 
+                  value = c(as.Date("2016-02-25"), Sys.Date())
+                  )
     ),
 
     # Show a plot of the generated distribution
@@ -57,6 +54,6 @@ ui <- fluidPage(
       plotOutput("distPlot")
     )
   )
-))
+)
 
 shinyApp(ui = ui, server=server)
