@@ -25,12 +25,12 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       sliderInput("dateIndex",
-                  "Date Index:",
+                  paste("Date Index:",START_DATE,"to",END_DATE),
                   min = 1,
                   max = dateCount,
                   value = 1,
                   step = 1,
-                  animate = TRUE
+                  animate = animationOptions(interval=300)
                   
       )
     ),
