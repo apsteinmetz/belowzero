@@ -6,6 +6,8 @@ END_DATE = Sys.Date()
 load("allYields.RData")
 allDates<- levels(as.factor(allYields$date))
 dateCount <- length(allDates)
+yieldRange<-range(allYields$yield,na.rm=TRUE)
+zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 
 
 
