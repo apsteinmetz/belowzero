@@ -59,7 +59,7 @@ zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 
 buildGraph <- function(gdata) {
   p <- ggplot(gdata, aes(tenor, country))
-  p<- p + geom_tile(aes(fill = yield,frame=date), colour = "white")
+  p<- p + geom_tile(aes(fill = yield), colour = "white")
   p<-p+scale_fill_gradientn(colours=c("red","white","steelblue"),values=c(0,zeroPos,1),na.value = "white")
   p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
   p<- p + labs(title=gdata$date[1]) + theme_classic()
@@ -76,7 +76,5 @@ for (dt in levels(as.factor(allYields$date))) {
 }
 devAskNewPage(ask=FALSE)
 
-# or...using gganimate if you have ImageMagick
-# p <- buildGraph(allYields)
 
 #blpDisconnect()
