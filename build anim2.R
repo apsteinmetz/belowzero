@@ -3,6 +3,9 @@
 library(ggplot2)
 library(gganimate)
 library(dplyr)
+library(animation)
+ani.options(convert=gsub('convert','magick',ani.options('convert')))
+
 
 START_DATE =  as.Date("2012-01-01","%Y-%m-%d")
 END_DATE = Sys.Date()
@@ -22,21 +25,21 @@ buildGraph <- function(gdata) {
   p<-p+scale_fill_gradientn(colours=c("red","white","steelblue"),values=c(0,zeroPos,1),na.value = "white")
   p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
   p<- p + labs(title=gdata$date[1],x="Years to Maturity")+ theme_classic()
-  p<-p + ylab("Americas         Asia                 Europe                                   ") 
+  p<-p + ylab("America           Asia                          Europe")+ theme(axis.title.y=element_text(hjust=0))
   return(p)
 }
 
 # #devAskNewPage(ask=TRUE)
-# for (dt in allDates) {
-#     gdata<-filter(allYields,date==dt)
-#     print(dt)
-#     png(paste("bz",dt,".png",sep=""))
-#     print(buildGraph(gdata))
-#     dev.off()
-#   }
-#devAskNewPage(ask=FALSE)
+for (dt in allDates) {
+    gdata<-filter(allYields,date==dt)
+    print(dt)
+    png(paste("bz",dt,".png",sep=""))
+    print(buildGraph(gdata))
+    dev.off()
+  }
+devAskNewPage(ask=FALSE)
 
 # or...using gganimate if you have ImageMagick
 p <- buildGraph(allYields)
-gg_animate(p)
+gg_animate(p,convert='gm convert')
 

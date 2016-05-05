@@ -4,6 +4,7 @@
 library(dplyr)
 library(ggplot2)
 library(gganimate)
+library(Rblpapi)
 
 #specify which maturities to get from the bbg yield curve vector
 curveTenors<-data.frame(bbgColumns=c(3,4,5,6,7,11),tenors=c(1,2,3,4,5,10))
