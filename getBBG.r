@@ -38,8 +38,15 @@ allYields<-data.frame()
 for (j in 1:nrow(allSecTickers)) {
   print(allSecTickers[j,])
   yields<-bdh(allSecTickers$secTicker[j],"PX_LAST",start.date = START_DATE,options = BDH_OPTIONS)
+  # get most recent data point
+  lastYield<-bdp(allSecTickers$secTicker[j],c("LAST_UPDATE_DT","PX_LAST"))
+  names(lastYield)<-names(yields)
+  yields<-rbind(yields,lastYield)
   allYields<-rbind(allYields,cbind(allSecTickers[j,],yields,row.names=NULL))
 }
+
+#get latest date
+yields<-bdp(allSecTickers$secTicker[j],"PX_LAST")
 
 # change "PX_LAST" to "yield"
 names(allYields)<-c("region", "country","tenor" ,"secTicker", "date","yield")
