@@ -8,9 +8,10 @@ Set starting parameters
 #devtools::install_github("dgrtwo/gganimate")
 
 library(ggplot2)
-library(gganimate)
 library(dplyr)
 library(Rblpapi)
+
+library(gganimate)
 library(animation)
 ani.options(convert=gsub('convert','magick',ani.options('convert')))
 
@@ -19,7 +20,7 @@ END_DATE = Sys.Date()
 
 #specify which maturities to get from the bbg yield curve vector
 #this assumes the column positions the tenors are in
-curveTenors<-data.frame(bbgColumns=c(3,4,5,6,7,11),tenors=c(1,2,3,4,5,10))
+curveTenors<-data.frame(bbgColumns=c(3,4,5,6,7,11),tenors=factor(c(1,2,3,4,5,10)))
 allSecTickers<-data.frame()
 #load a csv file with the names of the BBG yield curve tickers for the countries we want
 #Of the format: Ticker,Index Name,Region,CountryISO
@@ -92,8 +93,11 @@ p<- p + labs(title=gdata$date[1],x="Years to Maturity")+ theme_classic()
 p<-p + ylab("America           Asia                          Europe")+ theme(axis.title.y=element_text(hjust=0))
 
 ```
-Display Plot
+Display Plot after building a gif with external program ImageMagick
 ```{r}
+library(gganimate)
+library(animation)
+ani.options(convert=gsub('convert','magick',ani.options('convert')))
 gganimate(p)
 ```
 
