@@ -53,27 +53,6 @@ allSecTickers$secTicker=as.character(allSecTickers$secTicker)
 ```
 Get the yield history for each security and country
 ```{r}
-#old non-tidy style of retrieval
-#get the yields from START_DATE by BDH_OPTIONS periodicity
-allYields<-data.frame()
-for (j in 1:nrow(allSecTickers)) {
-  #print(allSecTickers[j,])
-  yields<-bdh(allSecTickers$secTicker[j],"PX_LAST",start.date = START_DATE,options = BDH_OPTIONS)
-  # get most recent data point
-  #lastYield<-bdp(allSecTickers$secTicker[j],c("LAST_UPDATE_DT","PX_LAST"))
-  #names(lastYield)<-names(yields)
-  #yields<-rbind(yields,lastYield)
-  allYields<-rbind(allYields,cbind(allSecTickers[j,],yields,row.names=NULL))
-}
-
-#get latest date
-#yields<-bdp(allSecTickers$secTicker[j],"PX_LAST")
-#save the raw data
-
-save(allYields,file="allYields.RData")
-```
-
-```{r}
 #----------------------------------
 
 # Get BBG Data
@@ -97,11 +76,8 @@ allYields<-tidy_bdh(allSecTickers$secTicker,
                start.date = START_DATE,
                options = BDH_OPTIONS)
 
-
-#get latest date
-#yields<-bdp(allSecTickers$secTicker[j],"PX_LAST")
+allYields<-allSecTickers %>% left_join(allYields,by='ticker') %>% select(-secTicker,-sector)
 #save the raw data
-
 save(allYields,file="allYields.RData")
 ```
 Massage the raw BBG data
@@ -119,20 +95,22 @@ zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 ```
 Build Plot
 ```{r}
-p <- ggplot(allYields, aes(tenor, country))
-# does frame break code if we don't use gganimate?
-p<- p + geom_tile(aes(fill = yield,frame=date), colour = "white")
-p<-p+scale_fill_gradientn(colours=c("red","white","steelblue"),values=c(0,zeroPos,1),na.value = "white")
-p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-p<- p + labs(title=gdata$date[1],x="Years to Maturity")+ theme_classic()
-p<-p + ylab("America           Asia                          Europe")+ theme(axis.title.y=element_text(hjust=0))
+img<-image_graph()
+for (one_date in allDates){
+  one_period <- allYields %>% filter(date==one_date)
+  p <- ggplot(one_period, aes(tenor, country))
+  p<- p + geom_tile(aes(fill = yield), colour = "white")
+  p<-p+scale_fill_gradientn(colours=c("red","white","steelblue"),values=c(0,zeroPos,1),na.value = "white")
+  p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
+  #title date needs fixing
+  p<- p + labs(title=gdata$date[1],x="Years to Maturity")+ theme_classic()
+  p<-p + ylab("America           Asia                          Europe")
+  p<-p + theme(axis.title.y=element_text(hjust=0))
+  print(p)
+}
+dev.off()
+animation <- image_animate(img, fps = 2)
+print(animation)
 
-```
-Display Plot after building a gif with external program ImageMagick
-```{r}
-library(gganimate)
-library(animation)
-ani.options(convert=gsub('convert','magick',ani.options('convert')))
-gganimate(p)
 ```
 
