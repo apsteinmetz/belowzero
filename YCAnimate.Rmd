@@ -2,16 +2,18 @@
 title: "Animated Global Yield Curves"
 output: html_notebook
 ---
-Set starting parameters
+Set starting parameters.
 
 ```{r}
 library(ggplot2)
 library(dplyr)
-library(Rblpapi)
 library(stringr)
+library(magick) #animation and GIF creation
+library(Rblpapi) #bloomberg
 
 START_DATE =  as.Date("2012-01-01","%Y-%m-%d")
 END_DATE = Sys.Date()
+BDH_OPTIONS = c("periodicitySelection"="MONTHLY")
 
 #specify which maturities to get from the bbg yield curve vector
 #this assumes the column positions the tenors are in
@@ -45,7 +47,7 @@ for (i in  1:nrow(curveTickers)){
 allSecTickers$secTicker=as.character(allSecTickers$secTicker)
 
 ```
-Get the yield history for each security and country
+Get the yield history for each security and country.
 ```{r}
 #----------------------------------
 
@@ -70,11 +72,13 @@ allYields<-tidy_bdh(allSecTickers$secTicker,
                start.date = START_DATE,
                options = BDH_OPTIONS)
 
-allYields<-allSecTickers %>% left_join(allYields,by='ticker') %>% select(-secTicker,-sector)
+allYields<-allSecTickers %>% 
+  left_join(allYields,by='ticker') %>% 
+  select(-secTicker,-sector)
 #save the raw data
 save(allYields,file="allYields.RData")
 ```
-Massage the raw BBG data
+Create some parameters for the plot.
 ```{r}
 
 load("allYields.RData")
@@ -87,7 +91,7 @@ yieldRange<-range(allYields$yield,na.rm=TRUE)
 zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 
 ```
-Build Plot
+Build plot, frame by frame.
 ```{r}
 img<-image_graph(600,400) #open magick graphics device
 for (one_date in allDates){
