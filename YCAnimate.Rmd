@@ -5,16 +5,10 @@ output: html_notebook
 Set starting parameters
 
 ```{r}
-#devtools::install_github("dgrtwo/gganimate")
-
 library(ggplot2)
 library(dplyr)
 library(Rblpapi)
 library(stringr)
-
-library(gganimate)
-library(animation)
-ani.options(convert=gsub('convert','magick',ani.options('convert')))
 
 START_DATE =  as.Date("2012-01-01","%Y-%m-%d")
 END_DATE = Sys.Date()
@@ -95,22 +89,26 @@ zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 ```
 Build Plot
 ```{r}
-img<-image_graph()
+img<-image_graph(600,400) #open magick graphics device
 for (one_date in allDates){
+  #interestingly, moving all the static plot elements outside the loop slows down rendering.
   one_period <- allYields %>% filter(date==one_date)
   p <- ggplot(one_period, aes(tenor, country))
   p<- p + geom_tile(aes(fill = yield), colour = "white")
-  p<-p+scale_fill_gradientn(colours=c("red","white","steelblue"),values=c(0,zeroPos,1),na.value = "white")
+  p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
+                            values=c(0,zeroPos,1),
+                            na.value = "white")
   p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-  #title date needs fixing
-  p<- p + labs(title=gdata$date[1],x="Years to Maturity")+ theme_classic()
-  p<-p + ylab("America           Asia                          Europe")
-  p<-p + theme(axis.title.y=element_text(hjust=0))
+  p<- p + labs(title=one_date,
+               x="Years to Maturity",
+               y="America           Asia                          Europe")
+  p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
   print(p)
 }
-dev.off()
-animation <- image_animate(img, fps = 2)
+dev.off() #close graphics device
+animation <- image_animate(img, fps = 5,loop=1)
 print(animation)
+image_write(animation,"below_zero.gif")
 
 ```
 
