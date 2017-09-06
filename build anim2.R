@@ -4,7 +4,7 @@ library(ggplot2)
 library(gganimate)
 library(dplyr)
 library(animation)
-ani.options(convert=gsub('convert','magick',ani.options('convert')))
+ani.options(convert='magick')
 
 
 START_DATE =  as.Date("2012-01-01","%Y-%m-%d")
@@ -41,5 +41,5 @@ devAskNewPage(ask=FALSE)
 
 # or...using gganimate if you have ImageMagick
 p <- buildGraph(allYields)
-gg_animate(p,convert='gm convert')
+gganimate(p,file='bz.mp4')
 

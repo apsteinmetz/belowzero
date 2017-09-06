@@ -10,6 +10,7 @@ Set starting parameters
 library(ggplot2)
 library(dplyr)
 library(Rblpapi)
+library(stringr)
 
 library(gganimate)
 library(animation)
@@ -21,7 +22,7 @@ END_DATE = Sys.Date()
 #specify which maturities to get from the bbg yield curve vector
 #this assumes the column positions the tenors are in
 curveTenors<-data.frame(bbgColumns=c(3,4,5,6,7,11),tenors=factor(c(1,2,3,4,5,10)))
-allSecTickers<-data.frame()
+allSecTickers<-data_frame()
 #load a csv file with the names of the BBG yield curve tickers for the countries we want
 #Of the format: Ticker,Index Name,Region,CountryISO
 curveTickers<-read.csv("curve tickers.csv",stringsAsFactors = FALSE)
@@ -42,7 +43,8 @@ for (i in  1:nrow(curveTickers)){
   allSecTickers<-rbind(allSecTickers,data.frame(region=curveTickers$Region[i],
                                                 country=curveTickers$CountryISO[i],
                                                 tenor=curveTenors$tenors,
-                                                secTicker=secTickers2))
+                                                secTicker=secTickers2,
+                                                ticker=word(secTickers2,1)))
   
 }
 #don't need a factor vector for tickers
@@ -51,6 +53,7 @@ allSecTickers$secTicker=as.character(allSecTickers$secTicker)
 ```
 Get the yield history for each security and country
 ```{r}
+#old non-tidy style of retrieval
 #get the yields from START_DATE by BDH_OPTIONS periodicity
 allYields<-data.frame()
 for (j in 1:nrow(allSecTickers)) {
@@ -62,6 +65,38 @@ for (j in 1:nrow(allSecTickers)) {
   #yields<-rbind(yields,lastYield)
   allYields<-rbind(allYields,cbind(allSecTickers[j,],yields,row.names=NULL))
 }
+
+#get latest date
+#yields<-bdp(allSecTickers$secTicker[j],"PX_LAST")
+#save the raw data
+
+save(allYields,file="allYields.RData")
+```
+
+```{r}
+#----------------------------------
+
+# Get BBG Data
+# CAUTION: The order of the returned secs series may not be the same as order of the secs inputs
+# CAUTION: There is no guarantee that the all securities will have values for the same dates.
+#DEPENDS ON dplyr, stringr
+tidy_bdh<-function(secs,...){
+  blpConnect() #must have a valid blp session running
+  blp_bdh  <-bdh(secs,...=...)
+  blp_bdh_tq<-bind_rows(blp_bdh,.id='ticker') %>%
+    mutate(sector=word(ticker,-1)) %>% 
+    mutate(ticker=word(ticker,1)) %>% 
+    select(date,ticker,everything())%>%
+    group_by(sector,ticker)
+  return(blp_bdh_tq)
+}
+# New tidy style of retrieval
+#get the yields from START_DATE by BDH_OPTIONS periodicity
+allYields<-tidy_bdh(allSecTickers$secTicker,
+               "PX_LAST",
+               start.date = START_DATE,
+               options = BDH_OPTIONS)
+
 
 #get latest date
 #yields<-bdp(allSecTickers$secTicker[j],"PX_LAST")
