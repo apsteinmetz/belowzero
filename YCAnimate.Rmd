@@ -1,10 +1,12 @@
 ---
-title: "Animated Global Yield Curves"
+title: "Animated Global Yield Curve Heatmap"
 output: html_notebook
 ---
+#Below Zero is an Option
+
 Set starting parameters.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 library(stringr)
@@ -47,8 +49,8 @@ for (i in  1:nrow(curveTickers)){
 allSecTickers$secTicker=as.character(allSecTickers$secTicker)
 
 ```
-Get the yield history for each security and country.
-```{r}
+Get the yield history for each security and country.  Here we roll a custom function to return Bloomberg data as a "tidy" data frame.  You could also use the package `tidyquant` to do this.
+```{r, message=FALSE, warning=FALSE}
 #----------------------------------
 
 # Get BBG Data
@@ -78,41 +80,71 @@ allYields<-allSecTickers %>%
 #save the raw data
 save(allYields,file="allYields.RData")
 ```
-Create some parameters for the plot.
+Create some parameters for the plot.  Crucially, we want a color scale that shades to red only below zero. `zeroPos` sets this up.  Otherwise, the red-to-blue palette would be spread evenly across the range where most of the range is above zero.
 ```{r}
-
 load("allYields.RData")
 #change PX_LAST to yield
 names(allYields)[6]<-"yield"
-allDates<- levels(as.factor(allYields$date))
+allDates<- levels(as.factor(allYields$date)) %>% tail(48)
 dateCount <- length(allDates)
 #determine where zero will be in the overall range of all the data
 yieldRange<-range(allYields$yield,na.rm=TRUE)
 zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
 
 ```
-Build plot, frame by frame.
+Test single frame appearance.
 ```{r}
-img<-image_graph(600,400) #open magick graphics device
+n<-20
+one_date<-allDates[n]
+one_period <- allYields %>% filter(date==one_date)
+p <- ggplot(one_period, aes(tenor, country))
+#p<- p + geom_tile(aes(fill = yield), colour = "white")
+p<- p + geom_raster(aes(fill = yield))
+p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
+                             values=c(0,zeroPos,1),
+                             na.value = "white")
+#p<- p + scale_fill_gradientn(colours=viridis::magma(32,begin=0,direction = #1))
+p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
+p<- p + labs(title=paste("Who Said Govt Bonds Could not Yield Below Zero?\n",
+              str_dup(".",n),one_date),
+             x="Years to Maturity",
+             y="Americas | Asia | Europe")
+p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
+#insert lines separating regions. This will break if country list changes
+p<-p+geom_hline(yintercept = 5.5,size=1.5)+geom_hline(yintercept = 16.5,size=1.5)
+p
+
+```
+
+
+Build plot, frame by frame.  Save it and reload the GIF into the notebook.  Note how `scale_fill_gradient` is used.
+```{r}
+n=0
+img<-image_graph(480,320) #open magick graphics device
+image_quantize(img, max = 16, colorspace = "rgb", dither = FALSE)
 for (one_date in allDates){
   #interestingly, moving all the static plot elements outside the loop slows down rendering.
+  n=n+1
   one_period <- allYields %>% filter(date==one_date)
   p <- ggplot(one_period, aes(tenor, country))
-  p<- p + geom_tile(aes(fill = yield), colour = "white")
+  p<- p + geom_raster(aes(fill = yield))
   p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
                             values=c(0,zeroPos,1),
                             na.value = "white")
   p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-  p<- p + labs(title=one_date,
+  p<- p + labs(title=paste("Who Said Govt Bonds Could not Yield Below Zero?\n",str_dup(".",n),one_date),
                x="Years to Maturity",
-               y="America           Asia                          Europe")
+               y="Americas | Asia | Europe")
   p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
+  #insert lines separating regions. This will break if country list changes
+  p<-p+geom_hline(yintercept = 5.5,size=1.5)+geom_hline(yintercept = 16.5,size=1.5)
+  p
   print(p)
 }
 dev.off() #close graphics device
-animation <- image_animate(img, fps = 5,loop=1)
-print(animation)
+animation <- image_animate(img, fps = 5,loop=0)
 image_write(animation,"below_zero.gif")
 
 ```
-
+#Global Yield Curve History
+![](below_zero.gif)
