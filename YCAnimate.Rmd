@@ -12,7 +12,7 @@ library(dplyr)
 library(stringr)
 library(magick) #animation and GIF creation
 library(Rblpapi) #bloomberg
-
+library(lubridate)
 START_DATE =  as.Date("2012-01-01","%Y-%m-%d")
 END_DATE = Sys.Date()
 BDH_OPTIONS = c("periodicitySelection"="MONTHLY")
@@ -113,10 +113,26 @@ p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
 #insert lines separating regions. This will break if country list changes
 p<-p+geom_hline(yintercept = 5.5,size=1.5)+geom_hline(yintercept = 16.5,size=1.5)
 p
+```
+Build plot as a facet wrap.
+```{r}
+one_date<- as.Date("2012-01-01")
+  one_period <- allYields %>% filter(date > one_date) %>% filter(month(date)==8)
+  p <- ggplot(one_period, aes(tenor, country))
+  p<- p + geom_tile(aes(fill = yield), colour = "white")
+  p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
+                            values=c(0,zeroPos,1),
+                            na.value = "white")
+  p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
+  p<- p + labs(title="Global Government Yield Curves Go Below Zero",
+               x="Years to Maturity",
+               y="Countries")
+  p<-p+facet_wrap(~date)+theme(axis.text.y = element_blank())
+  #p<-p+theme(  strip.background = element_blank(),strip.text.x = element_blank())
+
+    p
 
 ```
-
-
 Build plot, frame by frame.  Save it and reload the GIF into the notebook.  Note how `scale_fill_gradient` is used.
 ```{r}
 n=0
