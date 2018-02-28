@@ -2,6 +2,7 @@
 title: "Animated Global Yield Curve Heatmap"
 output: html_notebook
 ---
+
 #Below Zero is an Option
 
 Set starting parameters.
