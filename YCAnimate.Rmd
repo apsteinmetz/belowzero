@@ -102,7 +102,7 @@ Test single frame appearance.
 build_plot <- function(yield_dat){
   p <- ggplot(yield_dat, aes(tenor, country))
   ##p<- p + geom_tile(aes(fill = yield), colour = "white")
-  p<- p + geom_raster(data=yield_dat, aes(tenor, country,fill = yield))
+  p<- p + geom_raster(aes(tenor, country,fill = yield))
   p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
                                values=c(0,zeroPos,1),
                                na.value = "white")
@@ -112,10 +112,12 @@ build_plot <- function(yield_dat){
                            str_dup(".",n),one_date),
                x="Years to Maturity",
                y="Country")
-  p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
+  p<-p + theme_classic() +theme(axis.title.y=element_text(hjust=0.5),
+                               axis.ticks = element_blank())
   #insert 2 lines separating regions. This will break if country list changes
-  p<-p+geom_hline(yintercept = 6.5,size=1.2) + 
-    geom_hline(yintercept = 16.5,size=1.2)
+  # Assumes 5 countries in Americas and 10 in AsiaPac
+  p<-p+geom_hline(yintercept = 5.5,size=1.2) + 
+    geom_hline(yintercept = 15.5,size=1.2)
   p<-p+annotate("text",x=3.5,y=3,label="Americas")
   p<-p+annotate("text",x=3.5,y=11,label="AsiaPac")
   p<-p+annotate("text",x=3.5,y=26,label="Europe")
@@ -132,7 +134,10 @@ Build plot as a facet wrap.
 ```{r}
 one_date<- as.Date("2015-01-01")
   one_period <- allYields %>% filter(date > one_date) %>% filter(month(date)==12)
-  p <- build_plot(one_period) + facet_wrap(~date)+theme(axis.text.y = element_blank())
+  p <- build_plot(one_period) + facet_wrap(~date) + 
+    theme(axis.text.y = element_blank(),
+          axis.ticks.y.left = element_blank())+
+    labs(y=NULL)
   print(p)
 
 ```
@@ -165,26 +170,13 @@ library(zoo)
 library(stringr)
 allYields$year_mon=as.yearmon(allYields$date)
 system.time({
-  p <- ggplot(allYields, aes(tenor, country))
-  p<- p + geom_raster(aes(fill = yield))
-  p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
-                            values=c(0,zeroPos,1),
-                            na.value = "white")
-  p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-  p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
-  #insert lines separating regions. This will break if country list changes
-  p<-p+geom_hline(yintercept = 5.4,size=1.5) + 
-    geom_hline(yintercept = 15.4,size=1.5)
-  p<-p+annotate("text",x=3.5,y=3,label="Americas")
-  p<-p+annotate("text",x=3.5,y=12,label="AsiaPac")
-  p<-p+annotate("text",x=3.5,y=26,label="Europe")
+  p <- build_plot(allYields)
   # gganimate specific
   p<- p + labs(title=paste0("Who Said Govt Bonds Could not Yield Below Zero?\n",
-                            str_dup(".",1),
-                           'frame_time'),
+                            "{strrep('.',frame)}","{current_frame}"),
                x="Years to Maturity",
                y="Country")
-  p<-p+transition_manual(factor(date))
+  p<-p+transition_manual(year_mon)
   print(p)
 })
 ```
