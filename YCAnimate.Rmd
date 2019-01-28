@@ -9,8 +9,7 @@ Set starting parameters.
 
 ```{r, message=FALSE, warning=FALSE}
 library(ggplot2)
-library(dplyr)
-library(stringr)
+library(tidyverse)
 library(magick) #animation and GIF creation
 library(Rblpapi) #bloomberg
 library(lubridate)
@@ -65,7 +64,8 @@ tidy_bdh<-function(secs,...){
     mutate(sector=word(ticker,-1)) %>% 
     mutate(ticker=word(ticker,1)) %>% 
     select(date,ticker,everything())%>%
-    group_by(sector,ticker)
+    group_by(sector,ticker) %>% 
+    as_tibble()
   return(blp_bdh_tq)
 }
 # New tidy style of retrieval
@@ -77,7 +77,8 @@ allYields<-tidy_bdh(allSecTickers$secTicker,
 
 allYields<-allSecTickers %>% 
   left_join(allYields,by='ticker') %>% 
-  select(-secTicker,-sector)
+  select(-secTicker,-sector) %>% 
+  as_tibble()
 #save the raw data
 save(allYields,file="allYields.RData")
 ```
@@ -86,82 +87,128 @@ Create some parameters for the plot.  Crucially, we want a color scale that shad
 load("allYields.RData")
 #change PX_LAST to yield
 names(allYields)[6]<-"yield"
-allDates<- levels(as.factor(allYields$date)) %>% tail(48)
+allDates<- levels(as.factor(allYields$date))
 dateCount <- length(allDates)
 #determine where zero will be in the overall range of all the data
 yieldRange<-range(allYields$yield,na.rm=TRUE)
 zeroPos<-(0-yieldRange[1])/(yieldRange[2]-yieldRange[1])
+allYields <- allYields %>% complete(country,nesting(date,tenor))
 
 ```
 Test single frame appearance.
 ```{r}
-n<-20
+# ----------------------------------------------------------
+#build base elements comment to all sections
+build_plot <- function(yield_dat){
+  p <- ggplot(yield_dat, aes(tenor, country))
+  ##p<- p + geom_tile(aes(fill = yield), colour = "white")
+  p<- p + geom_raster(data=yield_dat, aes(tenor, country,fill = yield))
+  p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
+                               values=c(0,zeroPos,1),
+                               na.value = "white")
+  #p<- p + scale_fill_gradientn(colours=viridis::magma(32,begin=0,direction = #1))
+  p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
+  p<- p + labs(title=paste("Who Said Govt Bonds Could not Yield Below Zero?\n",
+                           str_dup(".",n),one_date),
+               x="Years to Maturity",
+               y="Country")
+  p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
+  #insert 2 lines separating regions. This will break if country list changes
+  p<-p+geom_hline(yintercept = 6.5,size=1.2) + 
+    geom_hline(yintercept = 16.5,size=1.2)
+  p<-p+annotate("text",x=3.5,y=3,label="Americas")
+  p<-p+annotate("text",x=3.5,y=11,label="AsiaPac")
+  p<-p+annotate("text",x=3.5,y=26,label="Europe")
+  return (p)
+}
+# --------------------------------------------------------
+n<-48
 one_date<-allDates[n]
 one_period <- allYields %>% filter(date==one_date)
-p <- ggplot(one_period, aes(tenor, country))
-#p<- p + geom_tile(aes(fill = yield), colour = "white")
-p<- p + geom_raster(aes(fill = yield))
-p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
-                             values=c(0,zeroPos,1),
-                             na.value = "white")
-#p<- p + scale_fill_gradientn(colours=viridis::magma(32,begin=0,direction = #1))
-p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-p<- p + labs(title=paste("Who Said Govt Bonds Could not Yield Below Zero?\n",
-              str_dup(".",n),one_date),
-             x="Years to Maturity",
-             y="Americas | Asia | Europe")
-p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
-#insert lines separating regions. This will break if country list changes
-p<-p+geom_hline(yintercept = 5.5,size=1.5)+geom_hline(yintercept = 16.5,size=1.5)
-p
+p <- build_plot(one_period)
+print(p)
 ```
 Build plot as a facet wrap.
 ```{r}
-one_date<- as.Date("2012-01-01")
-  one_period <- allYields %>% filter(date > one_date) %>% filter(month(date)==8)
-  p <- ggplot(one_period, aes(tenor, country))
-  p<- p + geom_tile(aes(fill = yield), colour = "white")
-  p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
-                            values=c(0,zeroPos,1),
-                            na.value = "white")
-  p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-  p<- p + labs(title="Global Government Yield Curves Go Below Zero",
-               x="Years to Maturity",
-               y="Countries")
-  p<-p+facet_wrap(~date)+theme(axis.text.y = element_blank())
-  #p<-p+theme(  strip.background = element_blank(),strip.text.x = element_blank())
-
-    p
+one_date<- as.Date("2015-01-01")
+  one_period <- allYields %>% filter(date > one_date) %>% filter(month(date)==12)
+  p <- build_plot(one_period) + facet_wrap(~date)+theme(axis.text.y = element_blank())
+  print(p)
 
 ```
 Build plot, frame by frame.  Save it and reload the GIF into the notebook.  Note how `scale_fill_gradient` is used.
 ```{r}
-n=0
-img<-image_graph(480,320) #open magick graphics device
-image_quantize(img, max = 16, colorspace = "rgb", dither = FALSE)
-for (one_date in allDates){
-  #interestingly, moving all the static plot elements outside the loop slows down rendering.
-  n=n+1
-  one_period <- allYields %>% filter(date==one_date)
-  p <- ggplot(one_period, aes(tenor, country))
+system.time({
+  n=0
+  img<-image_graph(480,320) #open magick graphics device
+  image_quantize(img, max = 16, colorspace = "rgb", dither = FALSE)
+  for (one_date in allDates){
+    #interestingly, moving all the static plot elements outside the loop slows down rendering.
+    n=n+1
+    one_period <- allYields %>% filter(date==one_date)
+    p <- build_plot(one_period)
+    print(p)
+  }
+  dev.off() #close graphics device
+  animation <- image_animate(img, fps = 5,loop=0)
+  image_write(animation,"below_zero.gif")
+})
+
+```
+#Global Yield Curve History
+![](below_zero.gif)
+
+# Now do it with gganimate
+```{r}
+library(gganimate)
+library(zoo)
+library(stringr)
+allYields$year_mon=as.yearmon(allYields$date)
+system.time({
+  p <- ggplot(allYields, aes(tenor, country))
   p<- p + geom_raster(aes(fill = yield))
   p<- p + scale_fill_gradientn(colours=c("red","white","steelblue"),
                             values=c(0,zeroPos,1),
                             na.value = "white")
   p<- p + expand_limits(fill=c(yieldRange[1]*1.1,yieldRange[2]))
-  p<- p + labs(title=paste("Who Said Govt Bonds Could not Yield Below Zero?\n",str_dup(".",n),one_date),
-               x="Years to Maturity",
-               y="Americas | Asia | Europe")
   p<-p + theme(axis.title.y=element_text(hjust=0))+ theme_classic()
   #insert lines separating regions. This will break if country list changes
-  p<-p+geom_hline(yintercept = 5.5,size=1.5)+geom_hline(yintercept = 16.5,size=1.5)
-  p
+  p<-p+geom_hline(yintercept = 5.4,size=1.5) + 
+    geom_hline(yintercept = 15.4,size=1.5)
+  p<-p+annotate("text",x=3.5,y=3,label="Americas")
+  p<-p+annotate("text",x=3.5,y=12,label="AsiaPac")
+  p<-p+annotate("text",x=3.5,y=26,label="Europe")
+  # gganimate specific
+  p<- p + labs(title=paste0("Who Said Govt Bonds Could not Yield Below Zero?\n",
+                            str_dup(".",1),
+                           'frame_time'),
+               x="Years to Maturity",
+               y="Country")
+  p<-p+transition_manual(factor(date))
   print(p)
-}
-dev.off() #close graphics device
-animation <- image_animate(img, fps = 5,loop=0)
-image_write(animation,"below_zero.gif")
+})
+```
+
+```{r}
+library(tidyverse)
+library(gganimate)
+library(zoo)
+#this works
+dat <- tibble(dates=as.Date(seq(0,360,by=31),origin="2010-01-01"),
+              value=paste("item",formatC(1:12,width = 2,flag="0")))
+ggplot(dat,aes(dates,value))+ geom_point() +
+  geom_hline(yintercept = 5,size=1.2)
+
+  ggplot(dat,aes(dates,value))+geom_point()+
+  geom_hline(yintercept = 6.4,size=1.2) + 
+  transition_time(time=dates)
+
+#nope
+# dat$dates <- as.yearmon(dat$dates)
+ ggplot(dat,aes(dates,value))+geom_point()+
+  geom_hline(yintercept = 5,size=1.2) +
+   transition_time(time=dates)
 
 ```
-#Global Yield Curve History
-![](below_zero.gif)
+
+

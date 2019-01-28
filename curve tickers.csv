@@ -1,7 +1,6 @@
 Ticker,Index Name,Region,CountryISO
 BVIS0587 Index,CAD Canada Govt BVAL Curve,Americas,CA
 BVIS0550 Index,US Treasury BVAL Curve,Americas,US
-BVIS0660 Index,CLP Chile Govt BVAL Curve,Americas,CL
 BVIS0627 Index,MXN Mexico Govt BVAL Curve,Americas,MX
 BVIS0661 Index,PEN Peru Govt BVAL Curve,Americas,PE
 BVIS0628 Index,COP/Colombia Govt BVAL Curve,Americas,CO
