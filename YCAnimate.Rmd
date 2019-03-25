@@ -181,26 +181,5 @@ system.time({
 })
 ```
 
-```{r}
-library(tidyverse)
-library(gganimate)
-library(zoo)
-#this works
-dat <- tibble(dates=as.Date(seq(0,360,by=31),origin="2010-01-01"),
-              value=paste("item",formatC(1:12,width = 2,flag="0")))
-ggplot(dat,aes(dates,value))+ geom_point() +
-  geom_hline(yintercept = 5,size=1.2)
-
-  ggplot(dat,aes(dates,value))+geom_point()+
-  geom_hline(yintercept = 6.4,size=1.2) + 
-  transition_time(time=dates)
-
-#nope
-# dat$dates <- as.yearmon(dat$dates)
- ggplot(dat,aes(dates,value))+geom_point()+
-  geom_hline(yintercept = 5,size=1.2) +
-   transition_time(time=dates)
-
-```
 
 
